@@ -1,4 +1,4 @@
-﻿
+
 ; ~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~ ;
 
 ; Shortcuts
@@ -6,6 +6,29 @@
 ; ~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~ ;
 
 #SingleInstance Force
+
+; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
+
+
+
+; ...*...
+
+
+
+; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
+
+; -----------------
+; HELPER FUNCTIONS
+; ---------
+
+join(arr) {
+    ret := ""
+    for index, str in arr {
+        ret .= str
+    }
+    return ret
+}
+
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
 
@@ -43,10 +66,16 @@
 
 ; Variables For Modes
     
-    ; Buffers of keys pressed in Stage Two of Liminal mode.
-        composeKeyLiminal_keysPressed := []
+    ; Stage Two
+        ; Buffers of keys pressed
+            composeHotkeyLiminal_keysPressed := []
+
+        ; Count for number of key pressed checks
+            composeHotkeyLiminal_checksCount := 0
+
 
 ; _,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
+
 ; ---
 
 ; _,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
@@ -57,32 +86,57 @@
 ; Enter ComposeHotkeyLiminal
     
     ; Stage One
-    activateComposeHotkeyLiminalStageOne() {
-        global composeHotkeyLiminal_waitingForFirstKeyPressed := true
-        global composeHotkeyLiminal_OnCountdown := false
-    }
+        activateComposeHotkeyLiminalStageOne() {
+            global composeHotkeyLiminal_waitingForFirstKeyPressed
+            global composeHotkeyLiminal_OnCountdown
+
+            composeHotkeyLiminal_waitingForFirstKeyPressed := true
+            composeHotkeyLiminal_OnCountdown := false
+
+            waitForFirstKey()
+        }
+
+        waitForFirstKey() {
+            if A_PriorKey != "RAlt" {
+               activateComposeHotkeyLiminalStageTwo()
+            }
+            else {
+                SetTimer waitForFirstKey, -10
+            }
+        }
 
     ; Stage Two
     activateComposeHotkeyLiminalStageTwo() {
-        global;
+        global composeHotkeyLiminal_waitingForFirstKeyPressed
+        global composeHotkeyLiminal_OnCountdown
+        global composeHotkeyLiminal_keysPressed
+        global composeHotkeyLiminal_keysPressed
+        global composeHotkeyLiminal_checksCount
+
         composeHotkeyLiminal_waitingForFirstKeyPressed := false
         composeHotkeyLiminal_OnCountdown := true
-        composeKeyLiminal_keysPressed.Clear()
-        composeKeyLiminal_keysPressed.Push(A_PriorKey)
-        SetTimer potentiallyActivateComposeMode, -100
+        composeHotkeyLiminal_keysPressed := []
+        composeHotkeyLiminal_keysPressed.Push(A_PriorKey)
+
+        composeHotkeyLiminal_checksCount := 0
+        potentiallyActivateComposeMode()
     }
 
 ; -------------
 
 ; Enter Hotkey Mode
     activateHotkeyMode() {
-        global;
+        global composeHotkeyLiminal_waitingForFirstKeyPressed
+        global composeHotkeyLiminal_OnCountdown
+        global HotkeyMode
+        global composeHotkeyLiminal_keysPressed
+
         composeHotkeyLiminal_waitingForFirstKeyPressed := false
         composeHotkeyLiminal_OnCountdown := false
         HotkeyMode := true
         
         toSend := A_PriorKey
-        toSend .= composeKeyLiminal_keysPressed.Join()
+        toSend .= join(composeHotkeyLiminal_keysPressed)
         Send toSend
     }
 
@@ -90,12 +144,27 @@
 
 ; Enter Compose Mode
     potentiallyActivateComposeMode() {
-        if composeHotkeyLiminal_OnCountdown {
-            toSend := "{Insert}"
-            toSend .= global composeKeyLiminal_keysPressed.Join()
+        global composeHotkeyLiminal_OnCountdown
+        global composeHotkeyLiminal_keysPressed
+
+        previousKey = composeHotkeyLiminal_keysPressed[composeHotkeyLiminal_keysPressed.Length]
+
+        excludedKeys := ["Control", "LAlt", "Shift"]
+        if (!excludedKeys.Has(A_PriorKey)) {
             composeHotkeyLiminal_OnCountdown := false
+            toSend := "{Insert}"
+            if (composeHotkeyLiminal_keysPressed.Length > 1) {
+                toSend .= join(composeHotkeyLiminal_keysPressed)
+            }
+            toSend .= A_PriorKey
             Send toSend
+            return
         }
+        else if (A_PriorKey != previousKey) {
+            composeHotkeyLiminal_keysPressed .= A_PriorKey
+        }
+
+        if (co)
     }
 
 ; -------------
@@ -103,7 +172,9 @@
 ; Transition Checkers
 
     checkIfTransitionToHotkeyMode() {
-        global;
+        global composeHotkeyLiminal_waitingForFirstKeyPressed
+        global composeHotkeyLiminal_OnCountdown
+
         return composeHotkeyLiminal_waitingForFirstKeyPressed || composeHotkeyLiminal_OnCountdown
     }
 
@@ -118,7 +189,7 @@
 ; ------
 
 ; Initial Liminal Activation
-    RAlt:::activateComposeHotkeyLiminal()
+    RAlt::activateComposeHotkeyLiminalStageOne()
 
 ; -------------
 
@@ -134,24 +205,6 @@
     #HotIf
 
 ; -------------
-
-; Any Other Key Pressed During Liminal
-    ; During Stage One
-    #HotIf composeHotkeyLiminal_waitingForFirstKeyPressed
-    *::activateComposeHotkeyLiminalStageTwo()
-    #HotIf
-
-    ; During Stage Two
-    excludedKeys := ["Control", "LAlt", "Shift"]
-    #HotIF composeHotkeyLiminal_OnCountdown
-    *::{
-        global;
-        if !excludedKeys.Has(A_PriorKey) {
-            composeKeyLiminal_keysPressed.Push(A_PriorKey)
-        }
-    }
-    #HotIf
-
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
 
@@ -174,8 +227,9 @@ $^n:: {
         WinActivate
     else
         Run "C:\Users\Nia\AppData\Local\Programs\Notion\Notion.exe"
-
-    global HotkeyMode := false
+    
+    global HotkeyMode
+    HotkeyMode := false
 }
 
 ; YNAB
@@ -191,8 +245,9 @@ $^y:: {
     }
     ToolTip "Activating Firefox..."
     Send "https://app.ynab.com/98f38188-aa37-4290-9658-9e0aeb241f9c/budget{Enter}"
-    
-    global HotkeyMode := false
+
+    global HotkeyMode
+    HotkeyMode := false
 }
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
