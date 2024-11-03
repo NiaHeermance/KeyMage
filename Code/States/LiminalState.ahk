@@ -38,6 +38,10 @@ class LiminalState extends State {
             )
         }
     }
+
+    Exit() {
+        this.awaitingKey.Stop()
+    }
     
 }
 

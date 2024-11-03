@@ -46,5 +46,11 @@ states := Map(
 
 machine := StateMachine(states, "Normal")
 
+#HotIf machine.state != "Normal"
+Esc::
+LWin::
+RAlt::{
+    machine.TransitionTo("Normal")
+}
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
