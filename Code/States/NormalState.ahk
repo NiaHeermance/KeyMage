@@ -34,3 +34,8 @@ LWin::
 RAlt::{
     myNormalState.machine.TransitionTo("Liminal")
 }
+
+^LWin::
+^RAlt::{
+    myNormalState.machine.TransitionTo("Hotkey")
+}
