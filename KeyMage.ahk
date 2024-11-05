@@ -24,7 +24,7 @@
 #Include Code/States/ComposeState.ahk
 #Include Code/States/HotkeyState.ahk
 
-#Include Code/States/OpenApplicationState.ahk
+#Include Code/States/HotkeyState/OpenApplicationState.ahk
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
 
@@ -43,6 +43,9 @@ states := Map(
     "Hotkey",  HotkeyState(),
     "OpenApplication", OpenApplicationState()
 )
+
+states["Hotkey"].SetChildren([states["OpenApplication"]])
+states["OpenApplication"].setParent(states["Hotkey"])
 
 machine := StateMachine(states, "Normal")
 
