@@ -78,7 +78,12 @@ $n:: {
 $o:: {
     global myOpenApplicationState
     myOpenApplicationState.PushWindow()
-    Send "^!+{PgDn}"
+    if WinExist("ahk_exe obsidian.exe"){
+        Send "^!+{PgDn}"
+    }
+    else {
+        openSoftware("C:\Users\Nia\AppData\Local\Programs\Obsidian\Obsidian.exe")
+    }
     myOpenApplicationState.machine.TransitionTo("Normal")
 }
 
