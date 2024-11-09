@@ -8,6 +8,7 @@
 #Requires AutoHotkey v2.0
 
 #Include ..\Utility\StateMachine.ahk
+#Include ..\Utility\InTrayDetector.ahk
 
 ; .:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:._.:*~*:. ;
 
@@ -78,7 +79,7 @@ $n:: {
 $o:: {
     global myOpenApplicationState
     myOpenApplicationState.PushWindow()
-    if WinExist("ahk_exe obsidian.exe"){
+    if DoesWinExistAtAll("ahk_exe obsidian.exe"){
         Send "^!+{PgDn}"
     }
     else {
